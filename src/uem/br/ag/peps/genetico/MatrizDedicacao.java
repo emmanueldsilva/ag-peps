@@ -236,7 +236,7 @@ public class MatrizDedicacao {
 		if (DOUBLE_ZERO.equals(tempoInicioFase)) {
 			return escalaTarefas.stream()
                                 .filter(rt -> DOUBLE_ZERO.equals(rt.getTempoInicio()) && rt.getTempoFim() > DOUBLE_ZERO)
-                                .findFirst()
+                                .min(comparingDouble(TaskScheduling::getTempoFim))
                                 .get();
 		}
 		
