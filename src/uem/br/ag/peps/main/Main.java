@@ -3,7 +3,6 @@ package uem.br.ag.peps.main;
 import uem.br.ag.peps.genetico.AlgoritmoGenetico;
 import uem.br.ag.peps.genetico.ParametrosAlgoritmo;
 import uem.br.ag.peps.genetico.ParametrosPesos;
-import uem.br.ag.peps.utils.RandomFactory;
 
 
 public class Main {
@@ -39,12 +38,13 @@ public class Main {
 	public static ParametrosAlgoritmo getParametrosDefault() {
 		final ParametrosAlgoritmo parametrosAlgoritmo = new ParametrosAlgoritmo();
 		parametrosAlgoritmo.setNumeroExecucoes(10);
-		parametrosAlgoritmo.setNumeroGeracoes(2500);
-		parametrosAlgoritmo.setTamanhoPopulacao(64);
+		parametrosAlgoritmo.setNumeroGeracoes(5000);
+		parametrosAlgoritmo.setTamanhoPopulacao(256);
 		parametrosAlgoritmo.setPercentualCruzamento(3.0);
 		parametrosAlgoritmo.setPercentualMutacao(1.0);
 //		parametrosAlgoritmo.setPathBenchmark("/home/emmanuel/projetos/ag-peps/resources/problem-generator/inst10-5-10-5.conf");
-		parametrosAlgoritmo.setPathBenchmark("/home/emmanuel/projetos/ag-peps/resources/problem-generator/inst10-10-10-5.conf");
+//		parametrosAlgoritmo.setPathBenchmark("/home/emmanuel/projetos/ag-peps/resources/problem-generator/inst10-10-10-5.conf");
+		parametrosAlgoritmo.setPathBenchmark("/home/emmanuel/projetos/ag-peps/resources/problem-generator/inst10-15-10-5.conf");
 //		parametrosAlgoritmo.setPathBenchmark("/home/emmanuel/projetos/ag-peps/resources/problem-generator/inst20-10-10-5.conf");
 //		parametrosAlgoritmo.setPathBenchmark("/home/emmanuel/projetos/ag-peps/resources/problem-generator/inst20-15-10-5.conf");
 //		parametrosAlgoritmo.setPathBenchmark("/home/emmanuel/projetos/ag-peps/resources/problem-generator/inst30-15-10-5.conf");

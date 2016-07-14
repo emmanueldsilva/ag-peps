@@ -63,8 +63,8 @@ public class AlgoritmoGenetico {
             if (melhorIndividuo.isFactivel()) {
             	hitRate++;
             	melhoresFitness.add(melhorIndividuo.getValorFitness());
-            	melhoresCustosProjeto.add(populacao.getMenorValorCustoProjeto());
-            	melhoresDuracaoProjeto.add(populacao.getMenorDuracaoProjeto());
+            	melhoresCustosProjeto.add(melhorIndividuo.getCustoTotalProjeto());
+            	melhoresDuracaoProjeto.add(melhorIndividuo.getDuracaoTotalProjeto());
             }
              
             printFactory.printEstatisticaExecucao(calculaTempoExecucao(start), parametrosAlgoritmo);
