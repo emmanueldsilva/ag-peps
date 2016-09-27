@@ -1,10 +1,21 @@
 package uem.br.ag.peps.utils;
 
+import static java.math.MathContext.DECIMAL32;
+
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Random;
+
+import uem.br.ag.peps.entidade.Employee;
+import uem.br.ag.peps.entidade.Skill;
+import uem.br.ag.peps.entidade.Task;
+import uem.br.ag.peps.problema.ProblemaBuilder;
  
 public class RandomFactory {
      
-    private final Random random;
+    public static final int HORAS_EXPEDIENTE = 8;
+
+	private final Random random;
      
     private static RandomFactory instance = null;
         
@@ -29,26 +40,75 @@ public class RandomFactory {
     }
     
     public Double randomGrauDedicacao() {
-    	int nextInt = nextInt(8);
-		switch (nextInt) {
+    	return getValorGrauDedicacao(nextInt(HORAS_EXPEDIENTE));
+    }
+    
+    public Double randomGrauDedicacaoPositivo() {
+    	return getValorGrauDedicacaoSemZero(nextInt(HORAS_EXPEDIENTE));
+    }
+
+	public Double getValorGrauDedicacao(int index) {
+		switch (index) {
 		case 0:
-			return 0.0;
+			return new BigDecimal(1).divide(new BigDecimal(7), DECIMAL32).doubleValue();
 		case 1:
-			return 0.14;
+			return new BigDecimal(2).divide(new BigDecimal(7), DECIMAL32).doubleValue();
 		case 2:
-			return 0.29;
+			return new BigDecimal(3).divide(new BigDecimal(7), DECIMAL32).doubleValue();
 		case 3:
-			return 0.43;
+			return new BigDecimal(4).divide(new BigDecimal(7), DECIMAL32).doubleValue();
 		case 4:
-			return 0.57;
+			return new BigDecimal(5).divide(new BigDecimal(7), DECIMAL32).doubleValue();
 		case 5:
-			return 0.71;
+			return new BigDecimal(6).divide(new BigDecimal(7), DECIMAL32).doubleValue();
 		case 6:
-			return 0.86;
-		case 7:
 		default:
-			return 1.00;
+			return new BigDecimal(7).divide(new BigDecimal(7), DECIMAL32).doubleValue();
 		}
+	}
+	
+	public Double getValorGrauDedicacaoSemZero(int index) {
+		switch (index) {
+		case 0:
+			return new BigDecimal(1).divide(new BigDecimal(7), DECIMAL32).doubleValue();
+		case 1:
+			return new BigDecimal(2).divide(new BigDecimal(7), DECIMAL32).doubleValue();
+		case 2:
+			return new BigDecimal(3).divide(new BigDecimal(7), DECIMAL32).doubleValue();
+		case 3:
+			return new BigDecimal(4).divide(new BigDecimal(7), DECIMAL32).doubleValue();
+		case 4:
+			return new BigDecimal(5).divide(new BigDecimal(7), DECIMAL32).doubleValue();
+		case 5:
+			return new BigDecimal(6).divide(new BigDecimal(7), DECIMAL32).doubleValue();
+		case 6:
+		default:
+			return new BigDecimal(7).divide(new BigDecimal(7), DECIMAL32).doubleValue();
+		}
+	}
+    
+    public Double randomDoubleRange1() {
+    	return this.random.nextDouble();
+    }
+    
+    public Double randomDoubleRange2() {
+    	return this.random.nextDouble() + nextInt(2);
+    }
+    
+    public Employee randomEmployee() {
+    	return randomElement(ProblemaBuilder.getInstance().getEmployees());
+    }
+    
+    public Employee randomEmployeeComSkill(Skill skill) {
+    	return randomElement(ProblemaBuilder.getInstance().getEmployeesComSkill(skill));
+    }
+    
+    public Task randomTask() {
+    	return randomElement(ProblemaBuilder.getInstance().getTasks());
+    }
+    
+	public <T> T randomElement(List<T> elements) {
+		return elements.get(this.random.nextInt(elements.size()));
     }
     
 }

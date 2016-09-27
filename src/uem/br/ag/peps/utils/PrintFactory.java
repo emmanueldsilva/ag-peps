@@ -4,6 +4,8 @@ import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
 import static org.apache.commons.io.FileUtils.getUserDirectoryPath;
 import static org.apache.commons.io.FileUtils.write;
+import static org.apache.commons.lang3.math.NumberUtils.DOUBLE_ONE;
+import static org.apache.commons.lang3.math.NumberUtils.DOUBLE_ZERO;
 import static org.jfree.chart.ChartFactory.createLineChart;
 import static org.jfree.chart.ChartUtilities.saveChartAsPNG;
 
@@ -15,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -28,6 +31,7 @@ import org.jfree.data.gantt.TaskSeriesCollection;
 
 import uem.br.ag.peps.entidade.Employee;
 import uem.br.ag.peps.entidade.Task;
+import uem.br.ag.peps.genetico.GrauDedicacao;
 import uem.br.ag.peps.genetico.Individuo;
 import uem.br.ag.peps.genetico.MatrizDedicacao;
 import uem.br.ag.peps.genetico.ParametrosAlgoritmo;
@@ -156,14 +160,14 @@ public class PrintFactory {
 	private void populaDataSetDuracaoProjeto(Populacao populacao, Integer geracao) {
 //		dataSetDuracaoProjeto.addValue(populacao.getMaiorDuracaoProjeto(), PIOR_DURACAO_PROJETO, geracao);
 //		dataSetDuracaoProjeto.addValue(populacao.getMediaDuracaoProjeto(), MEDIA_DURACAO_PROJETO, geracao);
-		dataSetDuracaoProjeto.addValue(populacao.getMenorDuracaoProjeto(), MELHOR_DURACAO_PROJETO, geracao);
+//		dataSetDuracaoProjeto.addValue(populacao.getMenorDuracaoProjeto(), MELHOR_DURACAO_PROJETO, geracao);
 		dataSetDuracaoProjeto.addValue(populacao.getMelhorIndividuo().getDuracaoTotalProjeto(), DURACAO_MELHOR_INDIVIDUO, geracao);
 	}
 	
 	private void populaDataSetCustoProjeto(Populacao populacao, Integer geracao) {
 //		dataSetCustoProjeto.addValue(populacao.getMaiorValorCustoProjeto(), PIOR_CUSTO_PROJETO, geracao);
 //		dataSetCustoProjeto.addValue(populacao.getMediaValorCustoProjeto(), MEDIA_CUSTO_PROJETO, geracao);
-		dataSetCustoProjeto.addValue(populacao.getMenorValorCustoProjeto(), MELHOR_CUSTO_PROJETO, geracao);
+//		dataSetCustoProjeto.addValue(populacao.getMenorValorCustoProjeto(), MELHOR_CUSTO_PROJETO, geracao);
 		dataSetCustoProjeto.addValue(populacao.getMelhorIndividuo().getCustoTotalProjeto(), CUSTO_MELHOR_INDIVIDUO, geracao);
 	}
 	
@@ -174,7 +178,6 @@ public class PrintFactory {
 			
 			String pathDiretorio = buildPathDiretorio();
 			buildGraficoFitness(pathDiretorio, melhorIndividuo, piorIndividuo);
-//			buildGraficoCustoProjeto(pathDiretorio, melhorIndividuo, piorIndividuo);
 			buildGraficoCustoProjeto(pathDiretorio, populacao.getMenorValorCustoProjeto(), populacao.getMaiorValorCustoProjeto());
 			buildGraficoDuracaoProjeto(pathDiretorio);
 			buildDiagramaGantt(pathDiretorio, melhorIndividuo);
@@ -192,17 +195,6 @@ public class PrintFactory {
 		categoryPlot.setRangeCrosshairVisible(true);
 		
 		saveChartAsPNG(new File(pathDiretorio + "grafico_fitness_" + execucao + ".png"), graficoFitness, 1000, 300);
-	}
-	
-	private void buildGraficoCustoProjeto(String pathDiretorio, Individuo melhorIndividuo, Individuo piorIndividuo) throws IOException {
-		JFreeChart graficoCustoProjeto = createLineChart("Custo do Projeto", "Gerações", "Custo", dataSetCustoProjeto, 
-				PlotOrientation.VERTICAL, true, true, false);
-		
-		CategoryPlot categoryPlot = (CategoryPlot) graficoCustoProjeto.getPlot();
-		categoryPlot.setDomainCrosshairVisible(true);
-		categoryPlot.setRangeCrosshairVisible(true);
-		
-		saveChartAsPNG(new File(pathDiretorio + "grafico_custo_" + execucao + ".png"), graficoCustoProjeto, 1000, 300);
 	}
 	
 	private void buildGraficoCustoProjeto(String pathDiretorio, Double menorCustoProjeto, Double maiorCustoProjeto) throws IOException {
@@ -235,7 +227,7 @@ public class PrintFactory {
 		
 		saveChartAsPNG(new File(pathDiretorio + "diagrama_gantt_" + execucao + ".png"), diagramaGantt, 1000, 600);
 	}
-	
+
     private IntervalCategoryDataset createDataset(List<TaskScheduling> taskScheduling) {
         final TaskSeries taskSeries = new TaskSeries("Tarefas");
 
@@ -283,16 +275,22 @@ public class PrintFactory {
 		final MatrizDedicacao matrizDedicacao = individuo.getMatrizDedicacao();
 		if (individuo.isFactivel() != null) {
 			sb.appendLine("FACTIVEL: " + individuo.isFactivel());
-			sb.appendLine("TAREFAS NÃO REALIZADAS: " + matrizDedicacao.getTarefasNaoRealizadas());
-			sb.appendLine("HABILIDADES NECESSARIAS: " + matrizDedicacao.getHabilidadesNecessarias());
-			sb.appendLine("TRABALHO EXTRA: " + matrizDedicacao.getTrabalhoExtra());
+			sb.appendLine("TAREFAS NÃO REALIZADAS: " + matrizDedicacao.getNumeroTarefasNaoRealizadas());
+			sb.appendLine("HABILIDADES NECESSARIAS: " + matrizDedicacao.getNumeroHabilidadesNecessarias());
+			sb.appendLine("TRABALHO EXTRA: " + matrizDedicacao.getTotalTrabalhoExtra());
 			sb.appendLine("CUSTO PROJETO: " + CURRENCY_INSTANCE.format(matrizDedicacao.getCustoTotalProjeto()));
 			sb.appendLine("DURAÇÃO PROJETO: " + matrizDedicacao.getDuracaoTotalProjeto());
 		}
 
 		for (Employee employee : ProblemaBuilder.getInstance().getEmployees()) {
 			for (Task task: ProblemaBuilder.getInstance().getTasks()) {
-				sb.append(matrizDedicacao.getGrauDedicacao(employee, task).getValor() + "\t");
+				final GrauDedicacao grauDedicacao = matrizDedicacao.getGrauDedicacao(employee, task);
+				
+				if (!DOUBLE_ZERO.equals(grauDedicacao.getValor()) && !DOUBLE_ONE.equals(grauDedicacao.getValor())) {
+					sb.append(grauDedicacao.getValor() + "\t");
+				} else {
+					sb.append(grauDedicacao.getValor() + "\t\t");
+				}
 			}
 			
 			sb.appendLine();

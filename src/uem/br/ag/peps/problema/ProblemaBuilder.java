@@ -7,6 +7,7 @@ import static java.util.Collections.emptyList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import uem.br.ag.peps.entidade.Employee;
 import uem.br.ag.peps.entidade.Skill;
@@ -164,6 +165,20 @@ public class ProblemaBuilder {
 		return employees.stream()
 				.filter(e -> e.getCodigo() == codigo)
 				.findFirst().get();
+	}
+	
+	public Employee getEmployees(int codigo) {
+		return employees.stream()
+				.filter(e -> e.getCodigo() == codigo)
+				.findFirst().get();
+	}
+	
+	
+	public List<Employee> getEmployeesComSkill(Skill skill) {
+		return employees.stream()
+				 .filter(e -> e.hasSkill(skill))
+				 .collect(Collectors.toList());
+                        
 	}
 	
 	public Skill getSkill(int codigo) {

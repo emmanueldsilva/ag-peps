@@ -95,7 +95,7 @@ public class IndividuoTest {
 		assertFalse("Indivíduo não é uma solução factível", individuo.isFactivel());
 		
 		individuo.calculaValorFitness();
-		assertEquals(Double.valueOf(0.000101175), individuo.getValorFitness());
+		assertEquals(Double.valueOf(0.0001011647), individuo.getValorFitness());
 	}
 	
 	@Test

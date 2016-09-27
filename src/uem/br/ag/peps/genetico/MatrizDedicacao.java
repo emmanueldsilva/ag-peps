@@ -1,6 +1,7 @@
 package uem.br.ag.peps.genetico;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.math.BigDecimal.ONE;
@@ -14,6 +15,7 @@ import static org.apache.commons.lang3.math.NumberUtils.DOUBLE_ZERO;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,7 +27,7 @@ import uem.br.ag.peps.utils.RandomFactory;
 
 import com.google.common.collect.Lists;
 
-public class MatrizDedicacao {
+public class MatrizDedicacao implements Cloneable {
 	
 	private GrauDedicacao[][] matrizDedicacao = null;
 	
@@ -37,11 +39,17 @@ public class MatrizDedicacao {
 	
 	private Double duracaoTotalProjeto;
 	
-	private int tarefasNaoRealizadas;
+	private int numeroTarefasNaoRealizadas;
 	
-	private int habilidadesNecessarias;
+	private List<Task> tarefasNaoRealizadas = newArrayList(); 
 	
-	private Double trabalhoExtra;
+	private int numeroHabilidadesNecessarias;
+	
+	private HashMap<Task, List<Skill>> habilidadesNecessarias = newHashMap();
+	
+	private Double totalTrabalhoExtra;
+	
+	private HashMap<Employee, List<FaseProjeto>> trabalhosExtra = newHashMap();
 
 	public MatrizDedicacao() {
 		int numeroEmpregados = ProblemaBuilder.getInstance().getEmployees().size();
@@ -132,14 +140,17 @@ public class MatrizDedicacao {
 	}
 
 	private int calculaNumeroTarefasNaoRealizadas() {
-		int numeroTarefasNaoRealizadas = 0; 
+		tarefasNaoRealizadas = newArrayList();
+		
+		int numeroTarefasNaoRealizadas = 0;
 		for (Task task: ProblemaBuilder.getInstance().getTasks()) {
 			if (calculaSomatorioDedicacaoTask(task).compareTo(ZERO) <= 0) {
 				numeroTarefasNaoRealizadas++;
+				tarefasNaoRealizadas.add(task);
 			}
 		}
 		
-		return this.tarefasNaoRealizadas = numeroTarefasNaoRealizadas;
+		return this.numeroTarefasNaoRealizadas = numeroTarefasNaoRealizadas;
 	}
 	
 	/**
@@ -148,16 +159,22 @@ public class MatrizDedicacao {
 	 * @return
 	 */
 	public boolean isSolucaoValidaPeranteRestricao2() {
-		habilidadesNecessarias = 0;
+		numeroHabilidadesNecessarias = 0;
+		habilidadesNecessarias = newHashMap();
 		for (Task task : ProblemaBuilder.getInstance().getTasks()) {
 			final List<Skill> employeesSkills = getSkillsDosEmployeesQueAtuamNaTask(task);
 			final List<Skill> taskSkills = task.getSkills();
 			employeesSkills.retainAll(taskSkills);
 			
-			habilidadesNecessarias += difference(newHashSet(taskSkills), newHashSet(employeesSkills)).size();
+			List<Skill> skillsNecessarias = difference(newHashSet(taskSkills), newHashSet(employeesSkills)).stream().collect(Collectors.toList());
+			if (!skillsNecessarias.isEmpty()) {
+				habilidadesNecessarias.put(task, skillsNecessarias);
+			}
+			
+			numeroHabilidadesNecessarias += skillsNecessarias.size();
 		}
 		
-		return habilidadesNecessarias == 0;
+		return numeroHabilidadesNecessarias == 0;
 	}
 	
 	/**
@@ -172,26 +189,38 @@ public class MatrizDedicacao {
 	}
 
 	private Double calculaEsforcoExtraTotalProjeto() {
+		trabalhosExtra = newHashMap();
+		
 		BigDecimal esforcoExtraTotalProjeto = ZERO;
 		for (Employee employee : ProblemaBuilder.getInstance().getEmployees()) {
 			esforcoExtraTotalProjeto = esforcoExtraTotalProjeto.add(calculaEsforcoExtraFuncionario(employee));
 		}
 		
-		return this.trabalhoExtra = esforcoExtraTotalProjeto.doubleValue();
+		return this.totalTrabalhoExtra = esforcoExtraTotalProjeto.doubleValue();
 	}
 
 	private BigDecimal calculaEsforcoExtraFuncionario(Employee employee) {
+		final List<FaseProjeto> fasesProjetoComEsforcoExtra = newArrayList();
+		
 		BigDecimal esforcoExtraFuncionario = ZERO;
 		for (FaseProjeto faseProjeto : fasesProjeto) {
-			esforcoExtraFuncionario = esforcoExtraFuncionario.add(calculaEsforcoExtraFuncionarioFase(employee, faseProjeto));
+			esforcoExtraFuncionario = esforcoExtraFuncionario.add(calculaEsforcoExtraFuncionarioFase(employee, faseProjeto, fasesProjetoComEsforcoExtra));
+		}
+		
+		if (!fasesProjetoComEsforcoExtra.isEmpty()) {
+			trabalhosExtra.put(employee, fasesProjetoComEsforcoExtra);
 		}
 		
 		return esforcoExtraFuncionario;
 	}
 
-	private BigDecimal calculaEsforcoExtraFuncionarioFase(Employee employee, FaseProjeto faseProjeto) {
+	private BigDecimal calculaEsforcoExtraFuncionarioFase(Employee employee, FaseProjeto faseProjeto, List<FaseProjeto> fasesProjetoComEsforcoExtra) {
 		final BigDecimal esforcoFase = calculaEsforcoFuncionarioFase(employee, faseProjeto);
 		if (esforcoFase.compareTo(ONE) > 0) {
+			if (!fasesProjetoComEsforcoExtra.contains(faseProjeto)) {
+				fasesProjetoComEsforcoExtra.add(faseProjeto);
+			}
+			
 			return calculaEsforcoExtraFuncionarioProjeto(faseProjeto, esforcoFase);
 		}
 		
@@ -249,7 +278,7 @@ public class MatrizDedicacao {
 	private List<TaskScheduling> getTaskSchedulingConcomitantes(TaskScheduling taskMaisCedoASerConcluida) {
 		Double tempoFim = taskMaisCedoASerConcluida.getTempoFim();
 		return escalaTarefas.stream()
-                            .filter(rt -> rt.getTempoInicio() < tempoFim && tempoFim < rt.getTempoFim())
+                            .filter(rt -> rt.getTempoInicio() < tempoFim && tempoFim <= rt.getTempoFim() && !rt.getTask().equals(taskMaisCedoASerConcluida.getTask()))
                             .collect(toList());
 	}
 
@@ -378,16 +407,41 @@ public class MatrizDedicacao {
 		return duracaoTotalProjeto;
 	}
 
-	public int getTarefasNaoRealizadas() {
+	public int getNumeroTarefasNaoRealizadas() {
+		return numeroTarefasNaoRealizadas;
+	}
+	
+	public List<Task> getTarefasNaoRealizadas() {
 		return tarefasNaoRealizadas;
 	}
 
-	public int getHabilidadesNecessarias() {
-		return habilidadesNecessarias;
-	}
-
-	public Double getTrabalhoExtra() {
-		return trabalhoExtra;
+	public int getNumeroHabilidadesNecessarias() {
+		return numeroHabilidadesNecessarias;
 	}
 	
+	public HashMap<Task, List<Skill>> getHabilidadesNecessarias() {
+		return habilidadesNecessarias;
+	}
+	
+	public Double getTotalTrabalhoExtra() {
+		return totalTrabalhoExtra;
+	}
+	
+	public HashMap<Employee, List<FaseProjeto>> getTrabalhosExtra() {
+		return trabalhosExtra;
+	}
+	
+	@Override
+	protected MatrizDedicacao clone() throws CloneNotSupportedException {
+		final MatrizDedicacao clone = new MatrizDedicacao();
+		
+		for (Employee employee : ProblemaBuilder.getInstance().getEmployees()) {
+			for (Task task : ProblemaBuilder.getInstance().getTasks()) {
+				clone.addGrauDedicacao(employee, task, getGrauDedicacao(employee, task).clone());
+			}
+		}
+		
+		return clone;
+	}
+
 }

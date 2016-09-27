@@ -7,7 +7,7 @@ import static java.math.MathContext.DECIMAL32;
 
 import java.math.BigDecimal;
 
-public class Individuo {
+public class Individuo implements Cloneable {
 
 	private MatrizDedicacao matrizDedicacao;
 	
@@ -22,9 +22,11 @@ public class Individuo {
 	}
 	
 	public void verificaFactibilidade() {
-		this.factivel = matrizDedicacao.isSolucaoValidaPeranteRestricao1() && 
-						matrizDedicacao.isSolucaoValidaPeranteRestricao2() && 
-						matrizDedicacao.isSolucaoValidaPeranteRestricao3();
+		boolean factivelRestricao1 = matrizDedicacao.isSolucaoValidaPeranteRestricao1();
+		boolean factivelRestricao2 = matrizDedicacao.isSolucaoValidaPeranteRestricao2();
+		boolean factivelRestricao3 = matrizDedicacao.isSolucaoValidaPeranteRestricao3();
+		
+		this.factivel = factivelRestricao1 && factivelRestricao2 && factivelRestricao3;
 	}
 	
 	public void calculaValorFitness() {
@@ -61,9 +63,9 @@ public class Individuo {
 		final ParametrosPesos parametrosPesos = ParametrosPesos.getInstance();
 		
 		BigDecimal penalidade = valueOf(parametrosPesos.getPesoPenalidade());
-		penalidade = penalidade.add(valueOf(parametrosPesos.getPesoTrabalhoNaoRealizado()).multiply(valueOf(matrizDedicacao.getTarefasNaoRealizadas())));
-		penalidade = penalidade.add(valueOf(parametrosPesos.getPesoHabilidadesNecessarias()).multiply(valueOf(matrizDedicacao.getHabilidadesNecessarias())));
-		penalidade = penalidade.add(valueOf(parametrosPesos.getPesoTrabalhoExtra()).multiply(valueOf(matrizDedicacao.getTrabalhoExtra())));
+		penalidade = penalidade.add(valueOf(parametrosPesos.getPesoTrabalhoNaoRealizado()).multiply(valueOf(matrizDedicacao.getNumeroTarefasNaoRealizadas())));
+		penalidade = penalidade.add(valueOf(parametrosPesos.getPesoHabilidadesNecessarias()).multiply(valueOf(matrizDedicacao.getNumeroHabilidadesNecessarias())));
+		penalidade = penalidade.add(valueOf(parametrosPesos.getPesoTrabalhoExtra()).multiply(valueOf(matrizDedicacao.getTotalTrabalhoExtra())));
 		
 		return penalidade;
 	}
@@ -149,6 +151,18 @@ public class Individuo {
 		return true;
 	}
 	
-	
+	@Override
+	protected Individuo clone() {
+		try {
+			final Individuo clone = new Individuo(this.matrizDedicacao.clone());
+			clone.setFactivel(this.factivel);
+			clone.setValorFitness(this.valorFitness);
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 	
 }
